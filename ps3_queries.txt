@@ -1,0 +1,127 @@
+#
+# Problem Set 3
+# Querying an XML Database
+#
+# Put your name and email address below:
+#     name: Brendan Murphy 
+#     email: brm043@g.harvard.edu
+#
+
+########################################################################
+# REMEMBER: 
+#   1. You should include *both* a query and a print command for each 
+#      problem, following the model shown in the sample query below.
+#   2. You should *not* include the results of the queries.
+#   3. You should test that the queries in this file are correct by
+#      executing all of the queries in the file from the command line.
+#      See the assignment for more details.
+########################################################################
+
+# Do not modify the following line.
+openContainer imdb.dbxml
+
+#
+# Sample query: Find the names of all movies in the database from 1990.
+#
+echo "results of sample query"
+echo "-----------------------"
+query 'for $m in collection("imdb.dbxml")//movie 
+       where $m/year = 1990
+       return $m/name'
+print
+echo ""
+
+#
+# 1. Add your query for this problem in the space provided below.
+# Remember to include both a query command and a print command,
+# putting them between the second and third echo commands.
+#
+
+echo "results of query 1"
+echo "------------------"
+query 'collection("imdb.dbxml")//movie[year>="1990"][year<"2000"][rating="R"]/name'
+print
+echo ""
+
+#
+# 2. Add your query for this problem in the space provided below.
+#
+
+echo "results of query 2"
+echo "------------------"
+query 'for $p in collection("imdb.dbxml")//person[@actedIn]
+       where contains($p/pob, "Boston, Mass")
+       return $p/name'
+print
+echo ""
+
+#
+# 3. Add your query for this problem in the space provided below.
+#
+
+echo "results of query 3"
+echo "------------------"
+query 'for $m in collection("imdb.dbxml")//movie
+       let $o := collection("imdb.dbxml")//oscar[@movie_id = $m/@id]
+       where $o/type = "BEST-PICTURE" and $m/rating = "R"
+       return <winner> {$m/name/text(), " (", $m/year/text(), ")"}</winner>'
+print
+echo ""
+
+#
+# 4. Add your query for this problem in the space provided below.
+#
+
+echo "results of query 4"
+echo "------------------"
+query 'for $m in collection("imdb.dbxml")//movie
+where $m/earnings_rank>=1 and $m/earnings_rank<=10
+return <top-grosser> {"\n\t",$m/name,
+		       "\n\t",$m/earnings_rank,"\t",
+			for $p in collection("imdb.dbxml")//person
+			where contains($m/@actors, $p/@id)
+			return ("\n\t",<big-star>{$p/name/text()}</big-star>),"\n"
+			}</top-grosser>'
+print
+echo ""
+
+#
+# 5. Add your query for this problem in the space provided below.
+# (only required of grad-credit students)
+#
+
+echo "results of query 5"
+echo "------------------"
+query 'for $r in distinct-values(collection("imdb.dbxml")//movie/rating)
+let $m := collection("imdb.dbxml")//movie[rating = $r]
+return <rating-info> {"\n\t",
+    			<rating> {$r} </rating>, "\n\t",
+    			<num-movies> {count($m)} </num-movies>, "\n\t",
+    			<avg-runtime> {avg($m/runtime)} </avg-runtime>, "\n",
+    			for $tg in $m[earnings_rank < 21]
+        		return ("\t", <top-grosser>{$tg/name/text()}</top-grosser>, "\n")
+			} </rating-info>'
+print
+echo ""
+
+#
+# 6. Add your query for this problem in the space provided below.
+# (only required of grad-credit students)
+#
+
+echo "results of query 6"
+echo "------------------"
+query 'for $p in collection("imdb.dbxml")//person[@actedIn and @directed]
+let $m := collection("imdb.dbxml")//movie
+return <actor-director>{"\n\t",
+    $p/name, "\n\t",
+    <num-acted> {count(tokenize($p/@actedIn, "\t"))}</num-acted>, "\n\t",
+    <num-directed> {count(tokenize($p/@directed, " "))}</num-directed>, "\n",
+    for $a in tokenize($p/@actedIn, "\t")
+        where contains($p/@directed, $a) and $m/@id = $a
+        return ("\t", <acted-and-directed>{ $m[@id=$a]/name/text() }</acted-and-directed>, 
+"\n")} </actor-director>'
+echo ""
+print
+# Do not modify the following line.
+quit
